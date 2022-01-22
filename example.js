@@ -1,13 +1,11 @@
 import Pledge from "./pledge.js"
 
 const promise = new Pledge((resolve, reject) => {
-  console.log("imediataly")
-  setTimeout(() => {
-    console.log("cb")
-    resolve(true)
-  }, 1000)
+  console.log("Executor")
+  resolve(42)
+})
+promise.then((result) => {
+  console.log(result)
 })
 
-promise.then((val) => {
-  console.log(val)
-})
+console.log("hi")

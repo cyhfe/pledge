@@ -5,9 +5,9 @@ export default class Pledge {
     this._prommiseResult = undefined
     this._promiseState = "pending"
 
-    const resolve = this.resolve.bind(this)
-    const reject = this.reject.bind(this)
-
+    // const resolve = this.resolve.bind(this)
+    // const reject = this.reject.bind(this)
+    const { resolve, reject } = createResolvingFunctions(this)
     executor(resolve, reject)
   }
   then(onFulfilled, onRejected) {
@@ -34,23 +34,32 @@ export default class Pledge {
         throw new Error()
     }
   }
-  resolve(value) {
-    if (this._promiseState !== "pending") return this
-    this._promiseState = "fulfilled"
-    this._prommiseResult = value
-    this._clearAndEnqueueTasks(this._fulfilmentTasks)
-    return this
-  }
-  reject(err) {
-    if (this._promiseState !== "pending") return this
-    this._promiseState = "rejected"
-    this._promiseResult = err
-    this._clearAndEnqueueTasks(this._rejectionTasks)
-    return this
-  }
+
   _clearAndEnqueueTasks(tasks) {
     this._fulfillmentTasks = undefined
     this._rejectionTasks = undefined
     tasks.map((task) => queueMicrotask(task))
+  }
+}
+
+function createResolvingFunctions(pledge) {
+  const resolve = (value) => {
+    if (pledge._promiseState !== "pending") return pledge
+    pledge._promiseState = "fulfilled"
+    pledge._prommiseResult = value
+    pledge._clearAndEnqueueTasks(pledge._fulfilmentTasks)
+    return pledge
+  }
+  const reject = (err) => {
+    if (pledge._promiseState !== "pending") return pledge
+    pledge._promiseState = "rejected"
+    pledge._promiseResult = err
+    pledge._clearAndEnqueueTasks(pledge._rejectionTasks)
+    return pledge
+  }
+
+  return {
+    resolve,
+    reject,
   }
 }

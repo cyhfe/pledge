@@ -1,0 +1,21 @@
+{
+  "name": "pledge",
+  "version": "1.0.0",
+  "description": "Promise 内部属性",
+  "main": "example.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyhfe/pledge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cyhfe/pledge/issues"
+  },
+  "homepage": "https://github.com/cyhfe/pledge#readme"
+}

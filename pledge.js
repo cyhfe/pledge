@@ -1,9 +1,12 @@
-class pledge {
+export default class Pledge {
   constructor(executor) {
     this._fulfilmentTasks = []
     this._rejectionTasks = []
     this._prommiseResult = undefined
     this._promiseState = "pending"
+
+    const resolve = this.resolve.bind(this)
+    const reject = this.reject.bind(this)
 
     executor(resolve, reject)
   }
@@ -35,7 +38,7 @@ class pledge {
     if (this._promiseState !== "pending") return this
     this._promiseState = "fulfilled"
     this._prommiseResult = value
-    this._clearAndEnqueueTasks(this.fulfilltask)
+    this._clearAndEnqueueTasks(this._fulfilmentTasks)
     return this
   }
   reject(err) {

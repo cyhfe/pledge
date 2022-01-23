@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Promise 内部属性",
   "main": "example.js",
-  "type": "module",
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "promises-aplus-tests promise.js"
   },
   "repository": {
     "type": "git",
@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/cyhfe/pledge/issues"
   },
-  "homepage": "https://github.com/cyhfe/pledge#readme"
+  "homepage": "https://github.com/cyhfe/pledge#readme",
+  "dependencies": {
+    "promises-aplus-tests": "^2.1.2"
+  }
 }

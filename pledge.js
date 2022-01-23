@@ -33,6 +33,14 @@ class Pledge {
       reject(error)
     }
   }
+
+  then() {
+    assertIsPledge(this)
+
+    const C = this.constructor[Symbol.species]
+    const resultCapability = new PledgeCapability(C)
+    return performPledgeThen(this, onFulfilled, onRejected, resultCapability)
+  }
 }
 
 function createResolvingFunctions(Pledge) {
@@ -147,6 +155,12 @@ export function fulfillPledge(pledge, value) {
 }
 
 export class PledgeResolveThenableJob {
+  // pledgeToResolve 上一个promise调用了resolve，resolve的值是promise
+  // thenable 就是resolve的promise
+  // then就是这个promise的then
+
+  // 意思就是如果一个promise resolve了另一个promise
+  // 必须等待这个promise完成
   constructor(pledgeToResolve, thenable, then) {
     return () => {
       const { resolve, reject } = createResolvingFunctions(pledgeToResolve)
@@ -158,6 +172,28 @@ export class PledgeResolveThenableJob {
         // same as reject(thenError)
         reject.apply(undefined, [thenError])
       }
+    }
+  }
+}
+
+export class PledgeCapability {
+  constructor(C) {
+    const executor = (resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    }
+
+    // not used but included for completeness with spec
+    executor.capability = this
+
+    this.pledge = new C(executor)
+
+    if (!isCallable(this.resolve)) {
+      throw new TypeError("resolve is not callable.")
+    }
+
+    if (!isCallable(this.reject)) {
+      throw new TypeError("reject is not callable.")
     }
   }
 }

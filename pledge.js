@@ -1,65 +1,86 @@
-export default class Pledge {
-  constructor(executor) {
-    this._fulfilmentTasks = []
-    this._rejectionTasks = []
-    this._prommiseResult = undefined
-    this._promiseState = "pending"
+class Promise {
+  constructor(handler) {
+    this.status = "pending"
+    this.onFulfilledCallbacks = []
+    this.onRejectedCallbacks = []
 
-    // const resolve = this.resolve.bind(this)
-    // const reject = this.reject.bind(this)
-    const { resolve, reject } = createResolvingFunctions(this)
-    executor(resolve, reject)
+    const resolve = (value) => {
+      if (this.status === "pending") {
+        this.status = "fulfilled"
+        this.value = value
+        this.onFulfilledCallbacks.forEach((fn) => fn(value))
+      }
+    }
+
+    const reject = (value) => {
+      if (this.status === "pending") {
+        this.status = "rejected"
+        this.value = value
+        this.onRejectedCallbacks.forEach((fn) => fn(value))
+      }
+    }
+
+    try {
+      handler(resolve, reject)
+    } catch (err) {
+      reject(err)
+    }
   }
+
   then(onFulfilled, onRejected) {
-    const fulfilltask = () => {
-      onFulfilled(this._prommiseResult)
-    }
+    return new Promise((resolve, reject) => {
+      if (this.status === "pending") {
+        this.onFulfilledCallbacks.push(() => {
+          try {
+            const fulfilledFromLastPromise = onFulfilled(this.value)
+            if (fulfilledFromLastPromise instanceof Promise) {
+              fulfilledFromLastPromise.then(resolve, reject)
+            } else {
+              resolve(fulfilledFromLastPromise)
+            }
+          } catch (err) {
+            reject(err)
+          }
+        })
+        this.onRejectedCallbacks.push(() => {
+          try {
+            const rejectedFromLastPromise = onRejected(this.value)
+            if (rejectedFromLastPromise instanceof Promise) {
+              rejectedFromLastPromise.then(resolve, reject)
+            } else {
+              reject(rejectedFromLastPromise)
+            }
+          } catch (err) {
+            reject(err)
+          }
+        })
+      }
 
-    const rejectionTask = () => {
-      onRejected(this._prommiseResult)
-    }
+      if (this.status === "fulfilled") {
+        try {
+          const fulfilledFromLastPromise = onFulfilled(this.value)
+          if (fulfilledFromLastPromise instanceof Promise) {
+            fulfilledFromLastPromise.then(resolve, reject)
+          } else {
+            resolve(fulfilledFromLastPromise)
+          }
+        } catch (err) {
+          reject(err)
+        }
+      }
 
-    switch (this._promiseState) {
-      case "pending":
-        this._fulfilmentTasks.push(fulfilltask)
-        this._rejectionTasks.push(rejectionTask)
-        break
-      case "fulfilled":
-        queueMicrotask(fulfilltask)
-        break
-      case "rejected":
-        queueMicrotask(rejectionTask)
-        break
-      default:
-        throw new Error()
-    }
-  }
-
-  _clearAndEnqueueTasks(tasks) {
-    this._fulfillmentTasks = undefined
-    this._rejectionTasks = undefined
-    tasks.map((task) => queueMicrotask(task))
-  }
-}
-
-function createResolvingFunctions(pledge) {
-  const resolve = (value) => {
-    if (pledge._promiseState !== "pending") return pledge
-    pledge._promiseState = "fulfilled"
-    pledge._prommiseResult = value
-    pledge._clearAndEnqueueTasks(pledge._fulfilmentTasks)
-    return pledge
-  }
-  const reject = (err) => {
-    if (pledge._promiseState !== "pending") return pledge
-    pledge._promiseState = "rejected"
-    pledge._promiseResult = err
-    pledge._clearAndEnqueueTasks(pledge._rejectionTasks)
-    return pledge
-  }
-
-  return {
-    resolve,
-    reject,
+      if (this.status === "rejected") {
+        try {
+          const rejectedFromLastPromise = onRejected(this.value)
+          if (rejectedFromLastPromise instanceof Promise) {
+            rejectedFromLastPromise.then(resolve, reject)
+          } else {
+            reject(rejectedFromLastPromise)
+          }
+        } catch (err) {
+          reject(err)
+        }
+      }
+    })
   }
 }
